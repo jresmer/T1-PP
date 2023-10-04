@@ -64,7 +64,7 @@ updatePossibilities (i, j) new_list possibilities_matrix =
 -- revisa a consistencia entre x e y
 revisionStep :: [Int] -> [Int] -> Int -> [Int]
 revisionStep _ [] _ = []
-revisionStep x (a:b) s | (s == -1) = a:b
+revisionStep x (a:b) s | (s == -1) = x
                        | (s == 0) = union (keepLowerThan x a) (revisionStep x b s)
                        | otherwise = union (keepGreaterThan x a) (revisionStep x b s)
     where
@@ -134,11 +134,21 @@ intersectionOfLists :: Eq a => [[a]] -> [a]
 intersectionOfLists [] = []
 intersectionOfLists lists = foldl1 intersect lists
 
--- mapeia a um passo de revisao para todos os vizinhos de uma celula x
-mapRevision :: Position -> [Position] -> PossibilityTable -> [[Int]]
-mapRevision (i,j) a p = map helper a
-    where  
-        helper = \x -> revisionStep (getPossibilities (i,j) p) (getPossibilities x p) (getConstraint (constraints) (linearPosition (i,j)) (linearPosition x))
+-- aplica passo de revisao entre x e uma lista de seus "vizinhos"
+revise :: Position -> [Position] -> PossibilityTable -> [Int]
+revise _ [] _ = [1..9]
+revise pos (x:xs) p = intersect (revise pos xs p) (revisionStep (getPossibilities pos p) (getPossibilities x p) (getConstraint (constraints) (linearPosition pos) (linearPosition x)))
+
+-- recupera as posicoes dos elementos que compartilham uma relacao de restricao com x
+neighbors :: Position -> [Constraint] -> [Position]
+neighbors _ [] = []
+neighbors pos (x:xs) = helper pos x ++ neighbors pos xs
+    where
+        helper :: Position -> Constraint -> [Position]
+        helper pos (x,y,comp) | ((linearPosition pos) == x) = [((div y 9), (mod y 9))]
+                              | ((linearPosition pos) == y) = [((div x 9), (mod x 9))]
+                              | otherwise = []
+                           
 
 -- garante a consistencia entre as possibilidades para as celulas
 arcConsistency :: PossibilityTable -> PossibilityTable
@@ -147,13 +157,10 @@ arcConsistency p = ensureConsistency positions p
         ensureConsistency :: [Position] -> PossibilityTable -> PossibilityTable
         ensureConsistency [] p = p
         ensureConsistency (a:b) p =
-            if (getPossibilities a p) == (getPossibilities a (updatePossibilities a (revise a) p)) then -- se houve alteracao nas possibilidades da posicao a
-                ensureConsistency (b ++ [a]) (updatePossibilities a (revise a) p) -- chamada recursiva com a ao fim da fila
+            if (getPossibilities a p) == (getPossibilities a (updatePossibilities a (revise a (positions) p) p)) then -- se houve alteracao nas possibilidades da posicao a
+                ensureConsistency (union (neighbors a (constraints)) b) (updatePossibilities a (revise a (positions) p) p) -- chamada recursiva com a ao fim da fila
             else
                 ensureConsistency b p -- se nao chamada recursiva retirando a da fila
-
-        revise :: Position -> [Int]
-        revise (i,j) = intersectionOfLists (mapRevision (i,j) (positions) p)
 
 -- checa se ha ao menos uma possibilidade para cada celula (corretude da soluscao)
 isValid :: PossibilityTable -> Bool
@@ -198,7 +205,11 @@ solveSudoku puzzle = solve (possibilities puzzle)
             (pos:_) -> Just pos
 
 main = do
-    --print (revisionStep (getPossibilities (1,4) (possibilities (board))) (getPossibilities (0,4) (possibilities (board))) (getConstraint (constraints) (linearPosition (1,4)) (linearPosition (0,4))))
-    --print (mapRevision (4,0) (positions) (possibilities (board)))
-    print (solveSudoku (board))
+    --print (intersect (revisionStep (getPossibilities (0,0) (possibilities (board))) (getPossibilities (1,0) (possibilities (board))) (getConstraint (constraints) (linearPosition (0,0)) (linearPosition (1,0)))) (revisionStep (getPossibilities (0,0) (possibilities (board))) (getPossibilities (0,1) (possibilities (board))) (getConstraint (constraints) (linearPosition (0,0)) (linearPosition (0,1)))))
+    --print (revise (0,0) [(1,0),(0,1)] (possibilities (board)))
+    --print (revise (0,0) (positions) (possibilities (board)))
+    --print (revisionStep [1,2,3] [1,2,3,4,5,6] (-1))
+    --print (arcConsistency (possibilities (board)))
+    print (neighbors (0,0) (constraints))
+    --print (solveSudoku (board))
     --print (possibilities (board))
