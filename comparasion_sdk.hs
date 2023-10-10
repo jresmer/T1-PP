@@ -68,7 +68,8 @@ revisionStep :: [Int] -> [Int] -> Int -> [Int]
 revisionStep _ [] _ = []
 revisionStep x (a:b) s | (s == -1) = x
                        | (s == 0) = union (keepLowerThan x a) (revisionStep x b s)
-                       | otherwise = union (keepGreaterThan x a) (revisionStep x b s)
+                       | (s == 1) = union (keepGreaterThan x a) (revisionStep x b s)
+                       | otherwise = union (keepDiffThan x a) (revisionStep x b s)
     where
         -- retira possibilidades caso o elemnto seja menor que n
         keepLowerThan :: [Int] -> Int -> [Int]
@@ -87,6 +88,14 @@ revisionStep x (a:b) s | (s == -1) = x
                 [a] ++ keepGreaterThan b n
             else
                 keepGreaterThan b n
+
+        keepDiffThan :: [Int] -> Int -> [Int]
+        keepDiffThan [] _ = []
+        keepDiffThan (a:b) n =
+          if a == n then
+              keepDiffThan b n
+          else
+              [a] ++ keepDiffThan b n
 
 {-     Funcoes auxiliares do backtrack propriamente dito     -}
 -- escolhe um elemento (o primeiro)
@@ -127,6 +136,7 @@ positions = [(i, j) | i <- [0..8], j <- [0..8]]
 getConstraint :: [Constraint] -> Int -> Int -> Int
 getConstraint [] _ _ = -1
 getConstraint ((c,d,comp):b) x y | (c == x && d == y) = comp
+                                 | (c == x && d == y && comp == 2) = comp
                                  | (c == y && d == x && comp == 1) = 0
                                  | (c == y && d == x && comp == 0) = 1
                                  | otherwise = getConstraint b x y
