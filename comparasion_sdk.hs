@@ -1,10 +1,12 @@
 -- imports
-import Data.List (nub, union, intersect)
+import Data.List
 
 -- definicao dos tipos de dados
 type Puzzle = [[Int]]
 
-type PossibilityTable = [[[Int]]]
+type Possibilities = [Int]
+
+type PossibilityTable = [[Possibilities]]
 
 type Constraint = (Int, Int, Int) 
 
@@ -50,11 +52,11 @@ possibilities :: Puzzle -> PossibilityTable
 possibilities input = map (map (\n -> if n == 0 then [1..9] else [n])) input
 
 -- recupera as possibilidades de um elemento
-getPossibilities :: (Int, Int) -> PossibilityTable -> [Int]
+getPossibilities :: Position -> PossibilityTable -> [Int]
 getPossibilities (i, j) possibilities_matrix = possibilities_matrix !! i !! j
 
 -- atualiza a matriz de possibilidades
-updatePossibilities :: (Int, Int) -> [Int] -> PossibilityTable -> PossibilityTable
+updatePossibilities :: Position -> [Int] -> PossibilityTable -> PossibilityTable
 updatePossibilities (i, j) new_list possibilities_matrix =
     take i possibilities_matrix ++ [updateRow (possibilities_matrix !! i) j new_list] ++ drop (i + 1) possibilities_matrix
   where
@@ -148,19 +150,32 @@ neighbors pos (x:xs) = helper pos x ++ neighbors pos xs
         helper pos (x,y,comp) | ((linearPosition pos) == x) = [((div y 9), (mod y 9))]
                               | ((linearPosition pos) == y) = [((div x 9), (mod x 9))]
                               | otherwise = []
-                           
+
+pairWithNeighbors :: Position -> [(Position,Position)]
+pairWithNeighbors pos = helper pos (neighbors pos (constraints))
+    where
+        helper :: Position -> [Position] -> [(Position,Position)]
+        helper pos [] = []
+        helper pos (x:xs) = [(pos, x)] ++ helper pos xs
+
+allPairs :: [(Position,Position)]
+allPairs = helper (positions)
+    where
+        helper :: [Position] -> [(Position,Position)]
+        helper [] = []
+        helper (x:xs) = (pairWithNeighbors x) ++ helper xs
 
 -- garante a consistencia entre as possibilidades para as celulas
 arcConsistency :: PossibilityTable -> PossibilityTable
-arcConsistency p = ensureConsistency positions p 
+arcConsistency p = ensureConsistency allPairs p
     where
-        ensureConsistency :: [Position] -> PossibilityTable -> PossibilityTable
+        ensureConsistency :: [(Position,Position)] -> PossibilityTable -> PossibilityTable
         ensureConsistency [] p = p
-        ensureConsistency (a:b) p =
-            if (getPossibilities a p) == (getPossibilities a (updatePossibilities a (revise a (positions) p) p)) then -- se houve alteracao nas possibilidades da posicao a
-                ensureConsistency (union (neighbors a (constraints)) b) (updatePossibilities a (revise a (positions) p) p) -- chamada recursiva com a ao fim da fila
+        ensureConsistency ((pos1,pos2):xs) p =
+            if (getPossibilities pos1 p) == (getPossibilities pos1 (updatePossibilities pos1 (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) p)) then
+                ensureConsistency xs p
             else
-                ensureConsistency b p -- se nao chamada recursiva retirando a da fila
+                ensureConsistency (union ((pairWithNeighbors pos1) \\ [(pos1,pos2)]) xs) (updatePossibilities pos1 (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) p)
 
 -- checa se ha ao menos uma possibilidade para cada celula (corretude da soluscao)
 isValid :: PossibilityTable -> Bool
@@ -206,10 +221,10 @@ solveSudoku puzzle = solve (possibilities puzzle)
 
 main = do
     --print (intersect (revisionStep (getPossibilities (0,0) (possibilities (board))) (getPossibilities (1,0) (possibilities (board))) (getConstraint (constraints) (linearPosition (0,0)) (linearPosition (1,0)))) (revisionStep (getPossibilities (0,0) (possibilities (board))) (getPossibilities (0,1) (possibilities (board))) (getConstraint (constraints) (linearPosition (0,0)) (linearPosition (0,1)))))
-    --print (revise (0,0) [(1,0),(0,1)] (possibilities (board)))
+    --print (revise (0,0) (neighbors (0,0) (constraints)) (possibilities (board)))
     --print (revise (0,0) (positions) (possibilities (board)))
     --print (revisionStep [1,2,3] [1,2,3,4,5,6] (-1))
-    --print (arcConsistency (possibilities (board)))
-    print (neighbors (0,0) (constraints))
+    print (arcConsistency (possibilities (board)))
+    --print (neighbors (1,1) (constraints))
     --print (solveSudoku (board))
     --print (possibilities (board))
