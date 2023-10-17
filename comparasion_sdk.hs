@@ -71,7 +71,7 @@ revisionStep x (a:b) s | (s == -1) = x
                        | (s == 1) = union (keepGreaterThan x a) (revisionStep x b s)
                        | otherwise = union (keepDiffThan x a) (revisionStep x b s)
     where
-        -- retira possibilidades caso o elemnto seja menor que n
+        -- retira possibilidades caso o elemnto seja maior que n
         keepLowerThan :: [Int] -> Int -> [Int]
         keepLowerThan [] n = []
         keepLowerThan (a:b) n =
@@ -80,7 +80,7 @@ revisionStep x (a:b) s | (s == -1) = x
             else
                 keepLowerThan b n
 
-        -- retira possibilidades caso o elemnto seja maior que n
+        -- retira possibilidades caso o elemnto seja menor que n
         keepGreaterThan :: [Int] -> Int -> [Int]
         keepGreaterThan [] n = []
         keepGreaterThan (a:b) n =
@@ -89,6 +89,7 @@ revisionStep x (a:b) s | (s == -1) = x
             else
                 keepGreaterThan b n
 
+        -- retira possibidades caso o elemento seja igualm a n
         keepDiffThan :: [Int] -> Int -> [Int]
         keepDiffThan [] _ = []
         keepDiffThan (a:b) n =
@@ -146,10 +147,27 @@ intersectionOfLists :: Eq a => [[a]] -> [a]
 intersectionOfLists [] = []
 intersectionOfLists lists = foldl1 intersect lists
 
--- aplica passo de revisao entre x e uma lista de seus "vizinhos"
-revise :: Position -> [Position] -> PossibilityTable -> [Int]
-revise _ [] _ = [1..9]
-revise pos (x:xs) p = intersect (revise pos xs p) (revisionStep (getPossibilities pos p) (getPossibilities x p) (getConstraint (constraints) (linearPosition pos) (linearPosition x)))
+-- revisa os "vizinhos" de uma posicao
+revise :: Position -> PossibilityTable -> PossibilityTable
+revise pos p = helper (sdk_neighbors)
+    where
+        -- revisa os vizinhos
+        helper :: [Position] -> PossibilityTable
+        helper [] = p
+        helper (x:xs) = (updatePossibilities x (revisionStep (getPossibilities x) (getPossibilities pos) 2) (helper xs))
+
+        -- gera a lista de posicoes dos vizinhos
+        sdk_neighbors :: [Position]
+        sdk_neighbors = (gridNeighbors pos) ++ (rowNeighbors pos) ++ (columnNeighbors pos)
+            where
+                gridNeighbors :: [Position]
+                gridNeighbors (i,j) = [(x,y) | x <- [], y <- []]
+
+                rowNeighbors :: [Position]
+                rowNeighbors (i,j) = [(x,y) | x <- [i], y <- ([0..8] \\ [j])]
+
+                columnNeighbors :: [Position]
+                columnNeighbors (i,j) = [(x,y) | x <- ([0..8] \\ [i]), y <- [j]]
 
 -- recupera as posicoes dos elementos que compartilham uma relacao de restricao com x
 neighbors :: Position -> [Constraint] -> [Position]
