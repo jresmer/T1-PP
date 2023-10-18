@@ -220,8 +220,7 @@ arcConsistency p = ensureConsistency allPairs p
     where
         ensureConsistency :: [(Position,Position)] -> PossibilityTable -> PossibilityTable
         ensureConsistency [] p = p
-        ensureConsistency ((pos1,pos2):xs) p | null (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) = noPossibilities
-                                             | null ((getPossibilities pos1 p) \\ (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2)))) = ensureConsistency xs p
+        ensureConsistency ((pos1,pos2):xs) p | null ((getPossibilities pos1 p) \\ (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2)))) = ensureConsistency xs p
                                              | otherwise = ensureConsistency  (union xs ((rPairWithNeighbors pos1) \\ [(pos2,pos1)])) (updatePossibilities pos1 (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) p)
 
 -- checa se ha ao menos uma possibilidade para cada celula (corretude da soluscao)
