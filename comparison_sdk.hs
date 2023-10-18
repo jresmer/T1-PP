@@ -35,7 +35,7 @@ constraints = [(0,1,0), (1,2,1), (3,4,1), (4,5,0), (6,7,0), (7,8,1)
             , (9,18,0), (10,19,0), (11,20,0), (12,21,0), (13,22,1), (14, 23,1), (15,24,0), (16,25,1), (17,26,1)
             , (18,19,0), (19,20,0), (21,22,1), (22,23,0), (24,25,1), (25,26,1)
             , (27,28, 0), (28,29,1), (30,31,0), (31,32,1), (33,34,0), (34,35,0)
-            , (27,36,0), (28,37,0), (29,38,0), (30,39,1), (31,40,1), (32,41,1), (33,42,0), (34,43,0), (35,43,1)
+            , (27,36,0), (28,37,0), (29,38,0), (30,39,1), (31,40,1), (32,41,1), (33,42,0), (34,43,0), (35,44,1)
             , (36,37,1), (37,38,1), (39,40,1), (40,41,1), (42,43,0), (43,44,1)
             , (36,45,1), (37,46,1), (38,47,0), (39,48,1), (40,49,1), (41,50,0), (42,51,0), (43,52,1), (44,53,0)
             , (45,46,1), (46,47,0), (48,49,0), (49,50,1), (51,52,1), (52,53,0)
@@ -214,16 +214,9 @@ arcConsistency p = ensureConsistency allPairs p
     where
         ensureConsistency :: [(Position,Position)] -> PossibilityTable -> PossibilityTable
         ensureConsistency [] p = p
-        ensureConsistency ((pos1,pos2):xs) p | null (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) = [[]]
+        ensureConsistency ((pos1,pos2):xs) p | null (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) = [[[linearPosition pos1]]]
                                              | (getPossibilities pos1 p) == (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) = ensureConsistency xs p
                                              | otherwise = ensureConsistency (union xs ((rPairWithNeighbors pos1) \\ [(pos2,pos1)])) (updatePossibilities pos1 (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) p)
-
--- checa se ha uma lista vazia na tabela de possibilidades
-hasNullList :: PossibilityTable -> Bool
-hasNullList [] = False
-hasNullList (x:xs)
-  | any null x = True
-  | otherwise = hasNullList xs
 
 -- checa se ha ao menos uma possibilidade para cada celula (corretude da soluscao)
 isValid :: PossibilityTable -> Bool
@@ -242,5 +235,5 @@ isDone p =
 -- Backtracking function to solve the Sudoku puzzle
 
 main = do
-  --print (arcConsistency (possibilities (board)))
-  print (length (allPairs))
+  print (arcConsistency (possibilities (board)))
+  --print (sdkNeighbors (0,0))
