@@ -16,34 +16,34 @@ type Position = (Int, Int)
 -- geracao do puzzle (tabuleiro)
 board :: Puzzle
 board = 
-  [ [0, 0, 0, 4, 0, 0, 0, 8, 0]
-  , [3, 2, 0, 0, 0, 0, 0, 0, 0]
-  , [0, 0, 8, 0, 1, 0, 6, 0, 0]
-  , [0, 0, 0, 0, 0, 7, 0, 0, 0]
+  [ [0, 0, 0, 0, 7, 0, 0, 0, 0]
+  , [0, 3, 0, 0, 0, 0, 0, 0, 0]
   , [0, 0, 0, 0, 0, 0, 0, 0, 0]
-  , [0, 0, 0, 0, 0, 2, 0, 0, 0]
-  , [0, 0, 6, 0, 8, 0, 3, 0, 0]
-  , [8, 3, 0, 0, 0, 0, 0, 0, 0]
-  , [0, 0, 0, 2, 0, 0, 0, 1, 0]
+  , [0, 0, 0, 0, 0, 0, 0, 0, 0]
+  , [0, 0, 0, 0, 3, 0, 0, 0, 0]
+  , [0, 0, 0, 0, 0, 0, 0, 0, 0]
+  , [0, 0, 0, 0, 0, 0, 8, 0, 0]
+  , [0, 0, 0, 0, 0, 0, 0, 0, 0]
+  , [0, 0, 0, 0, 2, 0, 0, 0, 0]
   ]
 
 -- geracao do puzzle (restricoes)
 constraints :: [Constraint]
-constraints = [(0,1,0), (1,2,1), (3,4,1), (4,5,0), (6,7,0), (7,8,1)
-            , (0,9,1), (1,10,1), (2,11,1), (3,12,0), (4,13,0), (5,14,0), (6,15,1), (7,16,1), (8,17,0)
-            , (9,10,1), (10,11,1), (12,13,1), (13,14,0), (15,16,0), (16,17,0)
-            , (9,18,0), (10,19,0), (11,20,0), (12,21,0), (13,22,1), (14, 23,1), (15,24,0), (16,25,1), (17,26,1)
-            , (18,19,0), (19,20,0), (21,22,1), (22,23,0), (24,25,1), (25,26,1)
-            , (27,28, 0), (28,29,1), (30,31,0), (31,32,1), (33,34,0), (34,35,0)
-            , (27,36,0), (28,37,0), (29,38,0), (30,39,1), (31,40,1), (32,41,1), (33,42,0), (34,43,0), (35,44,1)
-            , (36,37,1), (37,38,1), (39,40,1), (40,41,1), (42,43,0), (43,44,1)
-            , (36,45,1), (37,46,1), (38,47,0), (39,48,1), (40,49,1), (41,50,0), (42,51,0), (43,52,1), (44,53,0)
+constraints = [(0,1,1), (1,2,0), (3,4,0), (4,5,1), (6,7,0), (7,8,1)
+            , (0,9,1), (1,10,0), (2,11,0), (3,12,1), (4,13,1), (5,14,0), (6,15,0), (7,16,1), (8,17,0)
+            , (9,10,1), (10,11,0), (12,13,0), (13,14,0), (15,16,1), (16,17,0)
+            , (9,18,0), (10,19,0), (11,20,1), (12,21,0), (13,22,0), (14, 23,1), (15,24,1), (16,25,0), (17,26,0)
+            , (18,19,1), (19,20,1), (21,22,0), (22,23,1), (24,25,0), (25,26,0)
+            , (27,28, 0), (28,29,1), (30,31,0), (31,32,1), (33,34,1), (34,35,0)
+            , (27,36,0), (28,37,1), (29,38,1), (30,39,0), (31,40,1), (32,41,0), (33,42,1), (34,43,0), (35,44,1)
+            , (36,37,1), (37,38,1), (39,40,1), (40,41,0), (42,43,0), (43,44,1)
+            , (36,45,1), (37,46,1), (38,47,0), (39,48,0), (40,49,0), (41,50,0), (42,51,0), (43,52,1), (44,53,0)
             , (45,46,1), (46,47,0), (48,49,0), (49,50,1), (51,52,1), (52,53,0)
-            , (54,55,0), (55,56,0), (57,58,0), (58,59,0), (60,61,1), (61,62,0)
-            , (54,63,0), (55,64,1), (56,65,1), (57,66,1), (58,67,1), (59,68,1), (60,69,0), (61,70,0), (62,71,1)
-            , (63,64,1), (64,65,1), (66,67,0), (67,68,1), (69,70,0), (70,71,1)
-            , (63,72,1), (64,73,0), (65,74,0), (66,75,0), (67,76,1), (68,77,0), (69,78,0), (70,79,1), (71,80,1)
-            , (72,73,1), (73,74,0), (75,76,0), (76,77,0), (78,79,1), (79,80,0)
+            , (54,55,0), (55,56,1), (57,58,1), (58,59,0), (60,61,1), (61,62,0)
+            , (54,63,1), (55,64,0), (56,65,0), (57,66,1), (58,67,0), (59,68,0), (60,69,0), (61,70,1), (62,71,1)
+            , (63,64,0), (64,65,1), (66,67,1), (67,68,0), (69,70,1), (70,71,0)
+            , (63,72,1), (64,73,1), (65,74,0), (66,75,0), (67,76,1), (68,77,1), (69,78,1), (70,79,0), (71,80,0)
+            , (72,73,0), (73,74,0), (75,76,1), (76,77,0), (78,79,0), (79,80,1)
             ]
 
 {-    Funcoes que lidam com as possibilidades    -}
@@ -215,8 +215,8 @@ arcConsistency p = ensureConsistency allPairs p
         ensureConsistency :: [(Position,Position)] -> PossibilityTable -> PossibilityTable
         ensureConsistency [] p = p
         ensureConsistency ((pos1,pos2):xs) p | null (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) = [[[linearPosition pos1]]]
-                                             | (getPossibilities pos1 p) == (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) = ensureConsistency xs p
-                                             | otherwise = ensureConsistency (union xs ((rPairWithNeighbors pos1) \\ [(pos2,pos1)])) (updatePossibilities pos1 (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) p)
+                                             | null ((getPossibilities pos1 p) \\ (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2)))) = ensureConsistency xs p
+                                             | otherwise = ensureConsistency  (union xs ((rPairWithNeighbors pos1) \\ [(pos2,pos1)])) (updatePossibilities pos1 (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) p)
 
 -- checa se ha ao menos uma possibilidade para cada celula (corretude da soluscao)
 isValid :: PossibilityTable -> Bool
@@ -250,7 +250,7 @@ backtrack puzzle possibilities constraints
             Nothing -> tryChoices rest currentPossibilities
 
     tryChoice position (choice:choices) =
-        let updatedPossibilities = updatePossibilities position [choice] possibilities
+        let updatedPossibilities = arcConsistency (updatePossibilities position [choice] possibilities)
         in if isValid updatedPossibilities
             then Just updatedPossibilities
             else tryChoice position choices
@@ -267,7 +267,9 @@ backtrack puzzle possibilities constraints
 
 main :: IO ()
 main = do
+  {-
     let solvedPuzzle = backtrack board (arcConsistency (possibilities board)) constraints
     case solvedPuzzle of
         Just solution -> putStrLn "Solution found:" >> print solution
         Nothing -> putStrLn "No solution found."
+  -}
