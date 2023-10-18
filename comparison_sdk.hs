@@ -233,7 +233,41 @@ isDone p =
           checkRow p_list = all(\x -> (length (p_list !! x)) == 1) [0..8]
 
 -- Backtracking function to solve the Sudoku puzzle
+backtrack :: Puzzle -> PossibilityTable -> [Constraint] -> Maybe Puzzle
+backtrack puzzle possibilities constraints
+    | not (isValid possibilities) = Nothing
+    | isDone possibilities = Just (extractSolution possibilities)
+    | otherwise = tryChoices (minimumRemainingPossibilities possibilities) possibilities
+  where
+    -- tente todas as possibilidades para a célula com menos possibilidades restantes
+    tryChoices [] _ = Nothing
+    tryChoices ((position, choices):rest) currentPossibilities =
+        case tryChoice position choices of
+            Just newPossibilities ->
+                case backtrack puzzle newPossibilities constraints of
+                    Just solution -> Just solution
+                    Nothing -> tryChoices rest currentPossibilities
+            Nothing -> tryChoices rest currentPossibilities
 
+    tryChoice position (choice:choices) =
+        let updatedPossibilities = updatePossibilities position [choice] possibilities
+        in if isValid updatedPossibilities
+            then Just updatedPossibilities
+            else tryChoice position choices
+
+    -- transforma possibilityTable em Puzzle
+    extractSolution :: PossibilityTable -> Puzzle
+    extractSolution possTable = [[head (possibilities !! i !! j) | j <- [0..8]] | i <- [0..8]]
+
+    -- cria uma lista de posicões ordenada de forma crescente pelo número de possibilidades restantes
+    minimumRemainingPossibilities :: PossibilityTable -> [(Position, [Int])]
+    minimumRemainingPossibilities possTable =
+        let filteredPossibilities = filter (\(_, choices) -> not (null choices)) [(pos, getPossibilities pos possTable) | pos <- positions]
+        in sortOn (\(_, choices) -> length choices) filteredPossibilities
+
+main :: IO ()
 main = do
-  print (arcConsistency (possibilities (board)))
-  --print (sdkNeighbors (0,0))
+    let solvedPuzzle = backtrack board (arcConsistency (possibilities board)) constraints
+    case solvedPuzzle of
+        Just solution -> putStrLn "Solution found:" >> print solution
+        Nothing -> putStrLn "No solution found."
