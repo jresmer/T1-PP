@@ -56,6 +56,12 @@ positions = [(i, j) | i <- [0..8], j <- [0..8]]
 possibilities :: Puzzle -> PossibilityTable
 possibilities input = map (map (\n -> if n == 0 then [1..9] else [n])) input
 
+noPossibilities :: PossibilityTable
+noPossibilities = helper (board)
+    where
+        helper :: Puzzle -> PossibilityTable
+        helper input = map (map (\n -> [])) input
+
 -- recupera as possibilidades de um elemento
 getPossibilities :: Position -> PossibilityTable -> [Int]
 getPossibilities (i, j) possibilities_matrix = possibilities_matrix !! i !! j
@@ -250,6 +256,7 @@ backtrack possibilities constraints
             Nothing -> tryChoices rest currentPossibilities
 
     tryChoice _ [] = Nothing
+    tryChoice _ [] = Nothing
     tryChoice position (choice:choices) =
         let updatedPossibilities = arcConsistency (updatePossibilities position [choice] possibilities)
         in if isValid updatedPossibilities
@@ -265,6 +272,9 @@ backtrack possibilities constraints
     minimumRemainingPossibilities possTable =
         let filteredPossibilities = filter (\(_, choices) -> (length choices) > 1) [(pos, getPossibilities pos possTable) | pos <- positions]
         in sortOn (\(_, choices) -> length choices) filteredPossibilities
+            where
+                wLength :: [Int] -> Bool
+                wLength l = not ((length l) > 1)
 
 main :: IO ()
 main = do
