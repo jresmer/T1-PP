@@ -16,10 +16,10 @@ type Position = (Int, Int)
 -- geracao do puzzle (tabuleiro)
 board :: Puzzle
 board = 
-  [ [9, 0, 0, 0, 0, 0, 0, 0, 3]
-  , [5, 0, 0, 0, 0, 0, 0, 0, 0]
+  [ [0, 0, 0, 0, 0, 0, 0, 0, 0]
   , [0, 0, 0, 0, 0, 0, 0, 0, 0]
-  , [0, 0, 0, 0, 0, 1, 0, 0, 0]
+  , [0, 0, 0, 0, 0, 0, 0, 0, 0]
+  , [0, 0, 0, 0, 0, 0, 0, 0, 0]
   , [8, 0, 0, 0, 3, 0, 0, 0, 0]
   , [0, 0, 0, 0, 0, 0, 0, 0, 0]
   , [0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -241,25 +241,15 @@ backtrack :: PossibilityTable -> [Constraint] -> Maybe Puzzle
 backtrack possibilities constraints
     | not (isValid possibilities) = Nothing
     | isDone possibilities = Just (extractSolution possibilities)
-    | otherwise = tryChoices (minimumRemainingPossibilities possibilities) possibilities
+    | otherwise = tryChoices ((minimumRemainingPossibilities possibilities) !! 0) possibilities
   where
     -- tente todas as possibilidades para a célula com menos possibilidades restantes
-    tryChoices [] _ = Nothing
-    tryChoices ((position, choices):rest) currentPossibilities =
-        case tryChoice position choices of
-            Just newPossibilities ->
-                case (backtrack (arcConsistency (rPairWithNeighbors position) newPossibilities) constraints) of -- chamada recursiva da backtracking
-                    Nothing -> tryChoices rest currentPossibilities -- tenta outras possibilidades
-                    Just solution -> Just solution
-            Nothing -> tryChoices rest currentPossibilities
-
-    tryChoice _ [] = Nothing
-    tryChoice position (choice:choices) =
-        let updatedPossibilities = arcConsistency (rPairWithNeighbors position) (updatePossibilities position [choice] possibilities)
-        in if isValid updatedPossibilities
-            then Just updatedPossibilities
-            else tryChoice position choices
-
+    tryChoices (position, []) _ = Nothing
+    tryChoices (position, (choice:choices)) currentPossibilities =
+        case (backtrack (arcConsistency (rPairWithNeighbors position) (updatePossibilities position [choice] currentPossibilities)) constraints) of
+            Nothing -> tryChoices (position, choices) currentPossibilities
+            Just solution -> Just solution
+    
     -- transforma possibilityTable em Puzzle
     extractSolution :: PossibilityTable -> Puzzle
     extractSolution possTable = [[head (possibilities !! i !! j) | j <- [0..8]] | i <- [0..8]]
