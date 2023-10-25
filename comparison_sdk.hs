@@ -216,14 +216,11 @@ revise(csp, X, Y):
 -}
 
 -- garante a consistencia entre as possibilidades para as celulas
-arcConsistency :: PossibilityTable -> PossibilityTable
-arcConsistency p = ensureConsistency allPairs p
-    where
-        ensureConsistency :: [(Position,Position)] -> PossibilityTable -> PossibilityTable
-        ensureConsistency [] p = p
-        ensureConsistency ((pos1,pos2):xs) p | null (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) = (updatePossibilities pos1 (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) p)
-                                             | null ((getPossibilities pos1 p) \\ (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2)))) = ensureConsistency xs p
-                                             | otherwise = ensureConsistency  (union xs ((rPairWithNeighbors pos1) \\ [(pos2,pos1)])) (updatePossibilities pos1 (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) p)
+arcConsistency :: [(Position,Position)] -> PossibilityTable -> PossibilityTable
+arcConsistency [] p = p
+arcConsistency ((pos1,pos2):xs) p | null (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) = (updatePossibilities pos1 (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) p)
+                                  | null ((getPossibilities pos1 p) \\ (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2)))) = arcConsistency xs p
+                                  | otherwise = arcConsistency  (union xs ((rPairWithNeighbors pos1) \\ [(pos2,pos1)])) (updatePossibilities pos1 (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) p)
 
 -- checa se ha ao menos uma possibilidade para cada celula (corretude da soluscao)
 isValid :: PossibilityTable -> Bool
@@ -243,19 +240,22 @@ isDone p =
 backtrack :: PossibilityTable -> [Constraint] -> Maybe Puzzle
 backtrack possibilities constraints
     | not (isValid possibilities) = Nothing
-    | isDone (arcConsistency possibilities) = Just (extractSolution (arcConsistency possibilities))
+    | isDone possibilities = Just (extractSolution possibilities)
     | otherwise = tryChoices (minimumRemainingPossibilities possibilities) possibilities
   where
     -- tente todas as possibilidades para a célula com menos possibilidades restantes
+    tryChoices [] _ = Nothing
     tryChoices ((position, choices):rest) currentPossibilities =
         case tryChoice position choices of
-            Just newPossibilities -> case (backtrack newPossibilities constraints) of -- chamada recursiva da backtracking
+            Just newPossibilities ->
+                case (backtrack (arcConsistency (rPairWithNeighbors position) newPossibilities) constraints) of -- chamada recursiva da backtracking
                     Nothing -> tryChoices rest currentPossibilities -- tenta outras possibilidades
                     Just solution -> Just solution
             Nothing -> tryChoices rest currentPossibilities
 
+    tryChoice _ [] = Nothing
     tryChoice position (choice:choices) =
-        let updatedPossibilities = arcConsistency (updatePossibilities position [choice] possibilities)
+        let updatedPossibilities = arcConsistency (rPairWithNeighbors position) (updatePossibilities position [choice] possibilities)
         in if isValid updatedPossibilities
             then Just updatedPossibilities
             else tryChoice position choices
@@ -270,9 +270,10 @@ backtrack possibilities constraints
         let filteredPossibilities = filter (\(_, choices) -> (length choices) > 1) [(pos, getPossibilities pos possTable) | pos <- positions]
         in sortOn (\(_, choices) -> length choices) filteredPossibilities
 
+
 main :: IO ()
 main = do
-    let solvedPuzzle = backtrack (arcConsistency (possibilities board)) constraints
+    let solvedPuzzle = backtrack (arcConsistency allPairs (possibilities board)) constraints
     case solvedPuzzle of
         Just solution -> putStrLn "Solution found:" >> print solution
         Nothing -> putStrLn "No solution found."
