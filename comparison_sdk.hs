@@ -247,16 +247,13 @@ backtrack possibilities constraints
     | otherwise = tryChoices (minimumRemainingPossibilities possibilities) possibilities
   where
     -- tente todas as possibilidades para a célula com menos possibilidades restantes
-    tryChoices [] _ = Nothing
     tryChoices ((position, choices):rest) currentPossibilities =
-        case tryChoice position choices of \
+        case tryChoice position choices of
             Just newPossibilities -> case (backtrack newPossibilities constraints) of -- chamada recursiva da backtracking
                     Nothing -> tryChoices rest currentPossibilities -- tenta outras possibilidades
                     Just solution -> Just solution
             Nothing -> tryChoices rest currentPossibilities
 
-    tryChoice _ [] = Nothing
-    tryChoice _ [] = Nothing
     tryChoice position (choice:choices) =
         let updatedPossibilities = arcConsistency (updatePossibilities position [choice] possibilities)
         in if isValid updatedPossibilities
@@ -272,9 +269,6 @@ backtrack possibilities constraints
     minimumRemainingPossibilities possTable =
         let filteredPossibilities = filter (\(_, choices) -> (length choices) > 1) [(pos, getPossibilities pos possTable) | pos <- positions]
         in sortOn (\(_, choices) -> length choices) filteredPossibilities
-            where
-                wLength :: [Int] -> Bool
-                wLength l = not ((length l) > 1)
 
 main :: IO ()
 main = do
