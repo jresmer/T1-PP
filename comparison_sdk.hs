@@ -16,16 +16,17 @@ type Position = (Int, Int)
 -- geracao do puzzle (tabuleiro)
 board :: Puzzle
 board = 
-  [ [0, 0, 0, 0, 7, 0, 0, 0, 0]
-  , [0, 3, 0, 0, 0, 0, 0, 0, 0]
+  [ [9, 0, 0, 0, 0, 0, 0, 0, 3]
+  , [5, 0, 0, 0, 0, 0, 0, 0, 0]
+  , [0, 0, 0, 0, 0, 0, 0, 0, 0]
+  , [0, 0, 0, 0, 0, 1, 0, 0, 0]
+  , [8, 0, 0, 0, 3, 0, 0, 0, 0]
   , [0, 0, 0, 0, 0, 0, 0, 0, 0]
   , [0, 0, 0, 0, 0, 0, 0, 0, 0]
-  , [0, 0, 0, 0, 3, 0, 0, 0, 0]
-  , [0, 0, 0, 0, 0, 0, 0, 0, 0]
-  , [0, 0, 0, 0, 0, 0, 8, 0, 0]
-  , [0, 0, 0, 0, 0, 0, 0, 0, 0]
-  , [0, 0, 0, 0, 2, 0, 0, 0, 0]
+  , [0, 0, 3, 0, 0, 6, 0, 0, 0]
+  , [1, 0, 0, 0, 0, 0, 0, 0, 0]
   ]
+
 
 -- geracao do puzzle (restricoes)
 constraints :: [Constraint]
@@ -214,7 +215,7 @@ arcConsistency p = ensureConsistency allPairs p
     where
         ensureConsistency :: [(Position,Position)] -> PossibilityTable -> PossibilityTable
         ensureConsistency [] p = p
-        ensureConsistency ((pos1,pos2):xs) p | null (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) = [[[linearPosition pos1]]]
+        ensureConsistency ((pos1,pos2):xs) p | null (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) = (updatePossibilities pos1 (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) p)
                                              | null ((getPossibilities pos1 p) \\ (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2)))) = ensureConsistency xs p
                                              | otherwise = ensureConsistency  (union xs ((rPairWithNeighbors pos1) \\ [(pos2,pos1)])) (updatePossibilities pos1 (revisionStep (getPossibilities pos1 p) (getPossibilities pos2 p) (getConstraint (constraints) (linearPosition pos1) (linearPosition pos2))) p)
 
@@ -225,30 +226,30 @@ isValid p =
     where checkRow :: [[Int]] -> Bool
           checkRow p_list = all(\x -> not (null (p_list !! x))) [0..8]
 
--- checa completude da solucao <TODO>
+-- checa completude da solucao
 isDone :: PossibilityTable -> Bool
-isDone p = 
+isDone p =
     all(\row -> (checkRow (p !! row))) [0..8]
     where checkRow :: [[Int]] -> Bool
           checkRow p_list = all(\x -> (length (p_list !! x)) == 1) [0..8]
 
 -- Backtracking function to solve the Sudoku puzzle
-backtrack :: Puzzle -> PossibilityTable -> [Constraint] -> Maybe Puzzle
-backtrack puzzle possibilities constraints
+backtrack :: PossibilityTable -> [Constraint] -> Maybe Puzzle
+backtrack possibilities constraints
     | not (isValid possibilities) = Nothing
-    | isDone possibilities = Just (extractSolution possibilities)
+    | isDone (arcConsistency possibilities) = Just (extractSolution (arcConsistency possibilities))
     | otherwise = tryChoices (minimumRemainingPossibilities possibilities) possibilities
   where
     -- tente todas as possibilidades para a célula com menos possibilidades restantes
     tryChoices [] _ = Nothing
     tryChoices ((position, choices):rest) currentPossibilities =
-        case tryChoice position choices of
-            Just newPossibilities ->
-                case backtrack puzzle newPossibilities constraints of
+        case tryChoice position choices of \
+            Just newPossibilities -> case (backtrack newPossibilities constraints) of -- chamada recursiva da backtracking
+                    Nothing -> tryChoices rest currentPossibilities -- tenta outras possibilidades
                     Just solution -> Just solution
-                    Nothing -> tryChoices rest currentPossibilities
             Nothing -> tryChoices rest currentPossibilities
 
+    tryChoice _ [] = Nothing
     tryChoice position (choice:choices) =
         let updatedPossibilities = arcConsistency (updatePossibilities position [choice] possibilities)
         in if isValid updatedPossibilities
@@ -262,14 +263,12 @@ backtrack puzzle possibilities constraints
     -- cria uma lista de posicões ordenada de forma crescente pelo número de possibilidades restantes
     minimumRemainingPossibilities :: PossibilityTable -> [(Position, [Int])]
     minimumRemainingPossibilities possTable =
-        let filteredPossibilities = filter (\(_, choices) -> not (null choices)) [(pos, getPossibilities pos possTable) | pos <- positions]
+        let filteredPossibilities = filter (\(_, choices) -> (length choices) > 1) [(pos, getPossibilities pos possTable) | pos <- positions]
         in sortOn (\(_, choices) -> length choices) filteredPossibilities
 
 main :: IO ()
 main = do
-  {-
-    let solvedPuzzle = backtrack board (arcConsistency (possibilities board)) constraints
+    let solvedPuzzle = backtrack (arcConsistency (possibilities board)) constraints
     case solvedPuzzle of
         Just solution -> putStrLn "Solution found:" >> print solution
         Nothing -> putStrLn "No solution found."
-  -}
